@@ -28,6 +28,12 @@ module.exports = {
     // 'no-tabs': 'off',
     'indent': ["off", 2],
     // allow debugger during development
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    // ... 其他规则 ...
+    'generator-star-spacing': 'off',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+
+    // 添加这一行，关闭模板字符串空格检查
+    'template-curly-spacing': 'off'
   }
 }
