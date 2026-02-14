@@ -1,40 +1,39 @@
 <template>
-  <el-container id="admin-body">
-    <el-header style="z-index: 1;height: 80px;margin-left: -20px">
-      <Header style="position: absolute;width: 98%;"></Header>
-    </el-header>
-    <!--<el-row style="height: 100%;">-->
-    <el-container>
-      <el-aside style="height: 112%;margin-top: -80px;width: 250px">
+  <div id="admin-body">
+    <nav-menu></nav-menu>
+    <el-container style="height: calc(100vh - 61px); margin: 0; padding: 0;">
+      <el-aside style="width: 250px; background-color: #545c64; padding: 0; margin: 0;">
         <admin-menu></admin-menu>
       </el-aside>
-      <el-main>
+      <el-main style="background-color: #f0f2f5; padding: 20px; margin: 0;">
         <router-view/>
       </el-main>
     </el-container>
-  </el-container>
+  </div>
 </template>
 
 <script>
-  import AdminMenu from './AdminMenu'
-  import Header from './Header'
+import AdminMenu from './AdminMenu'
+import NavMenu from '../common/NavMenu'
 
-  export default {
-    name: 'AdminIndex',
-    components: {AdminMenu, Header},
-    data () {
-      return {
-        dialogVisible: false
-      }
-    },
-    mounted () {
-      // this.$router.replace('/admin/dashboard')
-    }
-  }
+export default {
+  name: 'AdminIndex',
+  components: { AdminMenu, NavMenu }
+}
 </script>
 
 <style scoped>
-  #admin-body {
-  height: 95vh;
+#admin-body {
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+.el-main {
+  padding: 0;
+}
+.el-container {
+  padding: 0;
+  margin: 0;
 }
 </style>

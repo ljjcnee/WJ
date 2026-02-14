@@ -17,31 +17,10 @@ export default new Router({
       path: '/home',
       name: 'Home',
       component: Home,
-      redirect: '/index',
+      // 核心修改 1：只要访问根目录，直接重定向到图书馆页面
+      redirect: '/library',
       children: [
-        {
-          path: '/index',
-          name: 'AppIndex',
-          component: () => import('../components/home/AppIndex')
-        },
-        {
-          path: '/jotter',
-          name: 'Jotter',
-          component: () => import('../components/jotter/Articles')
-        },
-        {
-          path: '/jotter/article',
-          name: 'Article',
-          component: () => import('../components/jotter/ArticleDetails')
-        },
-        {
-          path: '/admin/content/editor',
-          name: 'Editor',
-          component: () => import('../components/admin/content/ArticleEditor'),
-          meta: {
-            requireAuth: true
-          }
-        },
+        // 核心修改 2：彻底删除了原来的 /index 和所有博客文章相关的路由
         {
           path: '/library',
           name: 'Library',
@@ -92,6 +71,7 @@ export default new Router({
   ]
 })
 
+// 用于创建默认路由 (和上面保持一致)
 export const createRouter = routes => new Router({
   mode: 'history',
   routes: [
@@ -105,31 +85,8 @@ export const createRouter = routes => new Router({
       path: '/home',
       name: 'Home',
       component: Home,
-      redirect: '/index',
+      redirect: '/library',
       children: [
-        {
-          path: '/index',
-          name: 'AppIndex',
-          component: () => import('../components/home/AppIndex')
-        },
-        {
-          path: '/jotter',
-          name: 'Jotter',
-          component: () => import('../components/jotter/Articles')
-        },
-        {
-          path: '/jotter/article',
-          name: 'Article',
-          component: () => import('../components/jotter/ArticleDetails')
-        },
-        {
-          path: '/admin/content/editor',
-          name: 'Editor',
-          component: () => import('../components/admin/content/ArticleEditor'),
-          meta: {
-            requireAuth: true
-          }
-        },
         {
           path: '/library',
           name: 'Library',

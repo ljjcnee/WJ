@@ -1,8 +1,8 @@
 <template>
   <div>
-    <el-row style="height: 840px;">
+    <el-row style="min-height: 840px;">
       <search-bar @onSearch="searchResult" ref="searchBar"></search-bar>
-      <view-switch class="switch"></view-switch>
+
       <el-tooltip effect="dark" placement="right"
                   v-for="item in books.slice((currentPage-1)*pagesize,currentPage*pagesize)"
                   :key="item.id">
@@ -14,36 +14,37 @@
         </p>
         <p slot="content" style="width: 300px" class="abstract">{{item.abs}}</p>
 
-        <el-card style="width: 135px;margin-bottom: 20px;height: 275px;float: left;margin-right: 15px" class="book"
+        <el-card style="width: 160px; margin-bottom: 25px; height: 330px; float: left; margin-right: 20px" class="book"
                  bodyStyle="padding:10px" shadow="hover">
           <div class="cover">
             <img :src="item.cover" alt="封面">
           </div>
-          <div class="info">
+          <div class="info" style="text-align: center;">
             <div class="title">
               <a href="">{{item.title}}</a>
             </div>
-            <div style="font-size: 12px; color: #999; margin-top: 5px; text-align: left;">
+            <div style="font-size: 12px; color: #999; margin-top: 8px; text-align: center;">
               剩余库存: <span style="color: #f56c6c; font-weight: bold;">{{item.nums}}</span> 本
             </div>
           </div>
           <div class="author">{{item.author}}</div>
 
-          <div style="text-align: center; margin-top: 5px;">
+          <div style="text-align: center; margin-top: 10px;">
             <el-button
               size="mini"
               type="primary"
               plain
               :disabled="item.nums <= 0"
               @click.stop="borrowBook(item)">
-              {{ item.nums > 0 ? '借阅' : '缺货' }}
+              {{ item.nums > 0 ? '借阅图书' : '已无库存' }}
             </el-button>
           </div>
 
         </el-card>
       </el-tooltip>
     </el-row>
-    <el-row>
+
+    <el-row style="text-align: center; margin-top: 30px; clear: both;">
       <el-pagination
         @current-change="handleCurrentChange"
         :current-page="currentPage"
@@ -56,19 +57,18 @@
 
 <script>
   import SearchBar from './SearchBar'
-  import ViewSwitch from './ViewSwitch'
 
   export default {
     name: 'Books',
-    components: {SearchBar, ViewSwitch},
+    components: {SearchBar},
     data () {
       return {
         books: [],
         currentPage: 1,
-        pagesize: 17
+        pagesize: 17 // 你也可以考虑把这里改成 15，因为卡片变大了，一页放 17 个可能有点满
       }
     },
-    mounted: function () {
+    mounted () {
       this.loadBooks()
     },
     methods: {
@@ -93,7 +93,6 @@
           }
         })
       },
-      // 核心修复：去掉了所有的分号，并且把 catch(err) 改成了 catch(() => {})
       borrowBook (item) {
         if (item.nums <= 0) {
           this.$message.warning('该书库存不足，已被借完！')
@@ -126,30 +125,54 @@
 </script>
 
 <style scoped>
+  .book {
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .book:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+  }
+
   .cover {
-    width: 115px;
-    height: 172px;
+    width: 140px;
+    height: 200px;
     margin-bottom: 7px;
     overflow: hidden;
     cursor: pointer;
+    border-radius: 6px;
   }
 
   img {
-    width: 115px;
-    height: 172px;
+    width: 140px;
+    height: 200px;
+    transition: all 0.3s;
+  }
+
+  img:hover {
+    transform: scale(1.05);
   }
 
   .title {
-    font-size: 14px;
-    text-align: left;
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .author {
-    color: #333;
-    width: 102px;
+    color: #666;
+    width: 140px;
     font-size: 13px;
     margin-bottom: 6px;
-    text-align: left;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .abstract {
@@ -160,13 +183,6 @@
   .el-icon-delete {
     cursor: pointer;
     float: right;
-  }
-
-  .switch {
-    display: flex;
-    position: absolute;
-    left: 780px;
-    top: 25px;
   }
 
   a {
