@@ -14,7 +14,6 @@ export default new Router({
       component: Home
     },
     {
-      // home页面并不需要被访问，只是作为其它组件的父组件
       path: '/home',
       name: 'Home',
       component: Home,
@@ -47,6 +46,14 @@ export default new Router({
           path: '/library',
           name: 'Library',
           component: () => import('../components/library/LibraryIndex')
+        },
+        {
+          path: '/mybooks',
+          name: 'MyBooks',
+          component: () => import('../components/library/MyBooks'),
+          meta: {
+            requireAuth: true
+          }
         }
       ]
     },
@@ -85,7 +92,6 @@ export default new Router({
   ]
 })
 
-// 用于创建默认路由
 export const createRouter = routes => new Router({
   mode: 'history',
   routes: [
@@ -96,7 +102,6 @@ export const createRouter = routes => new Router({
       component: Home
     },
     {
-      // home页面并不需要被访问，只是作为其它组件的父组件
       path: '/home',
       name: 'Home',
       component: Home,
@@ -129,6 +134,14 @@ export const createRouter = routes => new Router({
           path: '/library',
           name: 'Library',
           component: () => import('../components/library/LibraryIndex')
+        },
+        {
+          path: '/mybooks',
+          name: 'MyBooks',
+          component: () => import('../components/library/MyBooks'),
+          meta: {
+            requireAuth: true
+          }
         }
       ]
     },

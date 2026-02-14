@@ -1,10 +1,15 @@
 package com.gm.wj.controller;
 
 import com.gm.wj.entity.Book;
+import com.gm.wj.entity.User;
 import com.gm.wj.result.Result;
 import com.gm.wj.result.ResultFactory;
 import com.gm.wj.service.BookService;
+import com.gm.wj.service.BorrowRecordService;
+import com.gm.wj.service.UserService;
 import com.gm.wj.util.StringUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,17 +17,18 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
-/**
- * Library controller.
- *
- * @author Evan
- * @date 2019/4
- */
 @RestController
 public class LibraryController {
     @Autowired
     BookService bookService;
+
+    @Autowired
+    BorrowRecordService borrowRecordService;
+
+    @Autowired
+    UserService userService;
 
     @GetMapping("/api/books")
     public Result listBooks() {
@@ -77,4 +83,50 @@ public class LibraryController {
         }
     }
 
+    // 核心安全修复：借阅图书
+    @PostMapping("/api/borrow")
+    public Result borrowBook(@RequestBody Map<String, Integer> request) {
+        // 1. 获取当前登录用户会话
+        Subject subject = SecurityUtils.getSubject();
+        if (!subject.isAuthenticated()) {
+            return ResultFactory.buildFailResult("请先登录");
+        }
+
+        // 2. 查询真实身份
+        String username = subject.getPrincipal().toString();
+        User user = userService.getByName(username);
+
+        int uid = user.getId();
+        int bid = request.get("bid");
+
+        String res = borrowRecordService.borrow(uid, bid);
+
+        if ("success".equals(res)) {
+            return ResultFactory.buildSuccessResult("借阅成功");
+        } else {
+            return ResultFactory.buildFailResult(res);
+        }
+    }
+
+    // 核心安全修复：我的书架 (不再轻信前端传来的 uid，而是通过 Shiro 拿真实身份)
+    @GetMapping("/api/mybooks")
+    public Result getMyBooks() {
+        Subject subject = SecurityUtils.getSubject();
+        if (!subject.isAuthenticated()) {
+            return ResultFactory.buildFailResult("请先登录");
+        }
+        // 直接从后端 Session 中拿到当前真正的登录账号
+        String username = subject.getPrincipal().toString();
+        User user = userService.getByName(username);
+
+        // 用真实的 UID 去查数据库
+        return ResultFactory.buildSuccessResult(borrowRecordService.getMyBooks(user.getId()));
+    }
+
+    @PostMapping("/api/return")
+    public Result returnBook(@RequestBody Map<String, Integer> request) {
+        int id = request.get("id");
+        borrowRecordService.returnBook(id);
+        return ResultFactory.buildSuccessResult("还书成功");
+    }
 }

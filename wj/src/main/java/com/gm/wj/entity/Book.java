@@ -1,12 +1,8 @@
 package com.gm.wj.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.ToString;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 /**
  * Book entity.
@@ -14,10 +10,8 @@ import javax.validation.constraints.NotNull;
  * @author Evan
  * @date 2019/4
  */
-@Data
 @Entity
 @Table(name = "book")
-@ToString
 @JsonIgnoreProperties({"handler","hibernateLazyInitializer"})
 public class Book {
     @Id
@@ -25,40 +19,90 @@ public class Book {
     @Column(name = "id")
     private int id;
 
-    /**
-     * Title of the book.
-     */
-    private String title;
-
-    /**
-     * Author name.
-     */
-    private String author;
-
-    /**
-     * Publication date.
-     */
-    private String date;
-
-    /**
-     * Press.
-     */
-    private String press;
-
-    /**
-     * Abstract of the book.
-     */
-    private String abs;
-
-    /**
-     * The url of the book's cover.
-     */
-    private String cover;
-
-    /**
-     * Category id.
-     */
     @ManyToOne
     @JoinColumn(name="cid")
     private Category category;
+
+    private String cover;
+    private String title;
+    private String author;
+    private String date;
+    private String press;
+    private String abs;
+
+    // ↓↓↓ 新加的库存数量字段 ↓↓↓
+    private int nums;
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getPress() {
+        return press;
+    }
+
+    public void setPress(String press) {
+        this.press = press;
+    }
+
+    public String getAbs() {
+        return abs;
+    }
+
+    public void setAbs(String abs) {
+        this.abs = abs;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getCover() {
+        return cover;
+    }
+
+    public void setCover(String cover) {
+        this.cover = cover;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    // ↓↓↓ 新加的 Getter 和 Setter ↓↓↓
+    public int getNums() {
+        return nums;
+    }
+
+    public void setNums(int nums) {
+        this.nums = nums;
+    }
 }

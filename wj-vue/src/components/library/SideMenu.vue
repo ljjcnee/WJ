@@ -32,6 +32,10 @@
       <i class="el-icon-menu"></i>
       <span slot="title">科技</span>
     </el-menu-item>
+    <el-menu-item index="7" @click="goToMyBooks">
+      <i class="el-icon-notebook-1"></i>
+      <span slot="title" style="font-weight: bold; color: #409EFF;">我的书架</span>
+    </el-menu-item>
   </el-menu>
 </template>
 
@@ -45,8 +49,15 @@
       },
       methods: {
         handleSelect (key, keyPath) {
-          this.cid = key
-          this.$emit('indexSelect')
+          // 如果点击的不是“我的书架”，才触发分类筛选逻辑
+          if (key !== '7') {
+            this.cid = key
+            this.$emit('indexSelect')
+          }
+        },
+        // 跳转到我的书架页面的方法
+        goToMyBooks () {
+          this.$router.push('/mybooks')
         }
       }
     }

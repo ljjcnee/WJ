@@ -13,7 +13,8 @@
           <span>{{item.press}}</span>
         </p>
         <p slot="content" style="width: 300px" class="abstract">{{item.abs}}</p>
-        <el-card style="width: 135px;margin-bottom: 20px;height: 233px;float: left;margin-right: 15px" class="book"
+
+        <el-card style="width: 135px;margin-bottom: 20px;height: 275px;float: left;margin-right: 15px" class="book"
                  bodyStyle="padding:10px" shadow="hover">
           <div class="cover">
             <img :src="item.cover" alt="封面">
@@ -22,8 +23,23 @@
             <div class="title">
               <a href="">{{item.title}}</a>
             </div>
+            <div style="font-size: 12px; color: #999; margin-top: 5px; text-align: left;">
+              剩余库存: <span style="color: #f56c6c; font-weight: bold;">{{item.nums}}</span> 本
+            </div>
           </div>
           <div class="author">{{item.author}}</div>
+
+          <div style="text-align: center; margin-top: 5px;">
+            <el-button
+              size="mini"
+              type="primary"
+              plain
+              :disabled="item.nums <= 0"
+              @click.stop="borrowBook(item)">
+              {{ item.nums > 0 ? '借阅' : '缺货' }}
+            </el-button>
+          </div>
+
         </el-card>
       </el-tooltip>
     </el-row>
@@ -49,7 +65,7 @@
       return {
         books: [],
         currentPage: 1,
-        pagesize: 18
+        pagesize: 17
       }
     },
     mounted: function () {
@@ -76,12 +92,40 @@
             _this.books = resp.data.result
           }
         })
+      },
+      // 核心修复：去掉了所有的分号，并且把 catch(err) 改成了 catch(() => {})
+      borrowBook (item) {
+        if (item.nums <= 0) {
+          this.$message.warning('该书库存不足，已被借完！')
+          return
+        }
+
+        this.$confirm('确认要借阅《' + item.title + '》吗？', '借阅确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'info'
+        }).then(() => {
+          this.$axios.post('/borrow', {
+            bid: item.id
+          }).then(resp => {
+            if (resp && resp.data.code === 200) {
+              this.$message.success('《' + item.title + '》 借阅成功！')
+              this.loadBooks()
+            } else {
+              this.$message.error(resp.data.message || '借阅失败')
+            }
+          }).catch(() => {
+             this.$message.error('借阅请求失败，请确保已登录')
+          })
+        }).catch(() => {
+          this.$message.info('已取消借阅')
+        })
       }
     }
   }
 </script>
-<style scoped>
 
+<style scoped>
   .cover {
     width: 115px;
     height: 172px;
@@ -93,7 +137,6 @@
   img {
     width: 115px;
     height: 172px;
-    /*margin: 0 auto;*/
   }
 
   .title {
@@ -133,5 +176,4 @@
   a:link, a:visited, a:focus {
     color: #3377aa;
   }
-
 </style>

@@ -1,22 +1,14 @@
 package com.gm.wj.service;
 
 import com.gm.wj.dao.UserDAO;
-import com.gm.wj.dto.UserDTO;
 import com.gm.wj.entity.AdminRole;
 import com.gm.wj.entity.User;
-import org.apache.shiro.crypto.SecureRandomNumberGenerator;
-import org.apache.shiro.crypto.hash.SimpleHash;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * @author Evan
- * @date 2019/4
- */
 @Service
 public class UserService {
     @Autowired
@@ -26,34 +18,43 @@ public class UserService {
     @Autowired
     AdminUserRoleService adminUserRoleService;
 
-    public List<UserDTO> list() {
-        List<User> users = userDAO.findAll();
-
-        // Find all roles in DB to enable JPA persistence context.
-//        List<AdminRole> allRoles = adminRoleService.findAll();
-
-        List<UserDTO> userDTOS = users
-                .stream().map(user -> (UserDTO) new UserDTO().convertFrom(user)).collect(Collectors.toList());
-
-        userDTOS.forEach(u -> {
-            List<AdminRole> roles = adminRoleService.listRolesByUser(u.getUsername());
-            u.setRoles(roles);
-        });
-
-        return userDTOS;
+    public List<User> list() {
+        List<User> users =  userDAO.findAll();
+        List<AdminRole> roles;
+        for (User user : users) {
+            roles = adminRoleService.listRolesByUser(user.getName());
+            user.setRoles(roles);
+        }
+        return users;
     }
 
     public boolean isExist(String username) {
-        User user = userDAO.findByUsername(username);
+        User user = getByName(username);
         return null != user;
     }
 
+    // 1. 供借阅模块调用
+    public User getByName(String username) {
+        return userDAO.findByUsername(username);
+    }
+
+    // 2. 供登录模块调用 (兼容旧代码)
     public User findByUsername(String username) {
         return userDAO.findByUsername(username);
     }
 
-    public User get(String username, String password) {
+    // 3. 供仪表盘统计调用
+    public long count() {
+        return userDAO.count();
+    }
+
+    public User get(String username, String password){
         return userDAO.getByUsernameAndPassword(username, password);
+    }
+
+    public void add(User user) {
+        user.setEnabled(true);
+        userDAO.save(user);
     }
 
     public int register(User user) {
@@ -83,16 +84,14 @@ public class UserService {
             return 2;
         }
 
-        // 默认生成 16 位盐
-        String salt = new SecureRandomNumberGenerator().nextBytes().toString();
+        String salt = new java.security.SecureRandom().toString();
         int times = 2;
-        String encodedPassword = new SimpleHash("md5", password, salt, times).toString();
+        String encodedPassword = new org.apache.shiro.crypto.hash.SimpleHash("md5", password, salt, times).toString();
 
         user.setSalt(salt);
         user.setPassword(encodedPassword);
 
         userDAO.save(user);
-
         return 1;
     }
 
@@ -104,10 +103,10 @@ public class UserService {
 
     public User resetPassword(User user) {
         User userInDB = userDAO.findByUsername(user.getUsername());
-        String salt = new SecureRandomNumberGenerator().nextBytes().toString();
+        String salt = new java.security.SecureRandom().toString();
         int times = 2;
         userInDB.setSalt(salt);
-        String encodedPassword = new SimpleHash("md5", "123", salt, times).toString();
+        String encodedPassword = new org.apache.shiro.crypto.hash.SimpleHash("md5", "123", salt, times).toString();
         userInDB.setPassword(encodedPassword);
         return userDAO.save(userInDB);
     }
