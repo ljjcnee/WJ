@@ -37,43 +37,39 @@ export default {
     return {
       navList: [
         { name: '/library', navItem: '图书馆', icon: 'el-icon-collection' },
-        { name: '/mybooks', navItem: '我的书架', icon: 'el-icon-notebook-1' },
+        // 👑 核心优化 1：改名为更符合业务逻辑的“我的借阅”
+        { name: '/mybooks', navItem: '我的借阅', icon: 'el-icon-notebook-1' },
         { name: '/admin/dashboard', navItem: '后台管理', icon: 'el-icon-setting' }
       ],
-      // 放弃自动计算，改为手动控制的明确变量
       isLoggedIn: false
     }
   },
-  // 页面刚加载时，查一次岗
   mounted () {
     this.checkLoginStatus()
   },
-  // 👑 终极探照灯：死死盯住每一次页面跳转
   watch: {
     '$route' () {
       this.checkLoginStatus()
     }
   },
   methods: {
-    // 强制检查逻辑：双重保险
     checkLoginStatus () {
-      let storeUser = this.$store.state.user
-      let localUser = window.localStorage.getItem('user')
+      // 👑 核心优化 2：精准读取 username，修复老代码里的幽灵 Bug！
+      let storeUsername = this.$store.state.username
+      let localUsername = window.localStorage.getItem('username')
 
       let loggedIn = false
 
-      if (storeUser && storeUser.username) {
+      if (storeUsername && storeUsername !== '') {
         loggedIn = true
-      } else if (localUser && localUser !== 'null' && localUser !== '""') {
+      } else if (localUsername && localUsername !== 'null' && localUsername !== '""' && localUsername !== '[]') {
         loggedIn = true
       }
 
-      // 如果发现当前是在 /login 页面，强行设为未登录
       if (this.$route.path === '/login') {
         loggedIn = false
       }
 
-      // 将检查结果赋给按钮开关
       this.isLoggedIn = loggedIn
     },
 
@@ -89,22 +85,16 @@ export default {
       }).then(() => {
         this.$axios.get('/logout').then(resp => {
           if (resp && resp.data.code === 200) {
-            // 清理作案现场
             this.$store.commit('logout')
-            window.localStorage.removeItem('user')
-
-            // 手动把按钮掰成“登录”
             this.isLoggedIn = false
-
             this.$message.success('已安全退出')
-            this.$router.replace('/login')
+            // 退出后回到图书馆大厅，不跳登录页
+            this.$router.replace('/library').catch(err => err)
           }
         }).catch(() => {
-           // 如果后端接口报错，前端也强制清理登出，防止卡死
            this.$store.commit('logout')
-           window.localStorage.removeItem('user')
            this.isLoggedIn = false
-           this.$router.replace('/login')
+           this.$router.replace('/library').catch(err => err)
         })
       }).catch(() => {})
     }

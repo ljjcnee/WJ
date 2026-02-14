@@ -143,7 +143,7 @@ router.beforeEach((to, from, next) => {
         name: 'Dashboard'
       })
     }
-    // 如果前端没有登录信息则直接拦截，如果有则判断后端是否正常登录（防止构造参数绕过）
+    // 如果前往的页面需要登录权限
     if (to.meta.requireAuth) {
       if (store.state.username) {
         axios.get('/authentication').then(resp => {
@@ -152,10 +152,10 @@ router.beforeEach((to, from, next) => {
           }
         })
       } else {
-        next({
-          path: 'login',
-          query: {redirect: to.fullPath}
-        })
+        // 👑 核心优化：未登录时，不再粗暴地 next({ path: 'login' })
+        // 而是弹出黄色警告提示，并使用 next(false) 中断路由跳转，让用户停留在原页面！
+        Message.warning('请先登录系统后再查看借阅信息！')
+        next(false)
       }
     } else {
       next()
