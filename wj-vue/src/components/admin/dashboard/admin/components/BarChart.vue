@@ -3,59 +3,55 @@
 </template>
 
 <script>
-// 👑 修复点：import 置顶
 import echarts from 'echarts'
 import resize from './mixins/resize'
-require('echarts/theme/macarons') // echarts theme
-
-const animationDuration = 6000
+require('echarts/theme/macarons')
 
 export default {
   mixins: [resize],
   props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    width: {
-      type: String,
-      default: '100%'
-    },
-    height: {
-      type: String,
-      default: '300px'
-    }
+    className: { type: String, default: 'chart' },
+    width: { type: String, default: '100%' },
+    height: { type: String, default: '300px' },
+    chartData: { type: Object, required: true }
   },
   data () {
-    return {
-      chart: null
+    return { chart: null }
+  },
+  watch: {
+    chartData: {
+      deep: true,
+      handler (val) {
+        this.setOptions(val)
+      }
     }
   },
   mounted () {
     this.$nextTick(() => {
-      this.initChart()
+      this.chart = echarts.init(this.$el, 'macarons')
+      this.setOptions(this.chartData)
     })
   },
   beforeDestroy () {
-    if (!this.chart) {
-      return
-    }
+    if (!this.chart) return
     this.chart.dispose()
     this.chart = null
   },
   methods: {
-    initChart () {
-      this.chart = echarts.init(this.$el, 'macarons')
-
+    setOptions ({ xAxis, inLibrary, emptyStock } = {}) {
+      if (!xAxis) return
       this.chart.setOption({
+        title: {
+          text: '分类在馆状态',
+          left: 'center',
+          top: '10'
+        },
         tooltip: {
           trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
+          axisPointer: { type: 'shadow' }
         },
         grid: {
-          top: 10,
+          top: 40,
           left: '2%',
           right: '2%',
           bottom: '3%',
@@ -63,39 +59,32 @@ export default {
         },
         xAxis: [{
           type: 'category',
-          data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-          axisTick: {
-            alignWithLabel: true
-          }
+          data: xAxis,
+          axisTick: { alignWithLabel: true }
         }],
         yAxis: [{
           type: 'value',
-          axisTick: {
-            show: false
-          }
+          axisTick: { show: false }
         }],
-        series: [{
-          name: '借书量',
-          type: 'bar',
-          stack: 'vistors',
-          barWidth: '60%',
-          data: [79, 52, 200, 334, 390, 330, 220],
-          animationDuration
-        }, {
-          name: '还书量',
-          type: 'bar',
-          stack: 'vistors',
-          barWidth: '60%',
-          data: [80, 52, 200, 334, 390, 330, 220],
-          animationDuration
-        }, {
-          name: '新增用户',
-          type: 'bar',
-          stack: 'vistors',
-          barWidth: '60%',
-          data: [30, 52, 200, 334, 390, 330, 220],
-          animationDuration
-        }]
+        series: [
+          {
+            name: '有货品种',
+            type: 'bar',
+            stack: 'vistors',
+            barWidth: '40%',
+            data: inLibrary,
+            animationDuration: 3000
+          },
+          {
+            name: '缺货品种',
+            type: 'bar',
+            stack: 'vistors',
+            barWidth: '40%',
+            data: emptyStock,
+            animationDuration: 3000,
+            itemStyle: { color: '#f4516c' }
+          }
+        ]
       })
     }
   }

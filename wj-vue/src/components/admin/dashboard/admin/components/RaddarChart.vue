@@ -3,60 +3,56 @@
 </template>
 
 <script>
-// 👑 修复点：import 置顶
 import echarts from 'echarts'
 import resize from './mixins/resize'
-require('echarts/theme/macarons') // echarts theme
-
-const animationDuration = 3000
+require('echarts/theme/macarons')
 
 export default {
   mixins: [resize],
   props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    width: {
-      type: String,
-      default: '100%'
-    },
-    height: {
-      type: String,
-      default: '300px'
-    }
+    className: { type: String, default: 'chart' },
+    width: { type: String, default: '100%' },
+    height: { type: String, default: '300px' },
+    chartData: { type: Object, required: true }
   },
   data () {
-    return {
-      chart: null
+    return { chart: null }
+  },
+  watch: {
+    chartData: {
+      deep: true,
+      handler (val) {
+        this.setOptions(val)
+      }
     }
   },
   mounted () {
     this.$nextTick(() => {
-      this.initChart()
+      this.chart = echarts.init(this.$el, 'macarons')
+      this.setOptions(this.chartData)
     })
   },
   beforeDestroy () {
-    if (!this.chart) {
-      return
-    }
+    if (!this.chart) return
     this.chart.dispose()
     this.chart = null
   },
   methods: {
-    initChart () {
-      this.chart = echarts.init(this.$el, 'macarons')
-
+    setOptions ({ indicators, inventory } = {}) {
+      if (!indicators || indicators.length === 0) return
       this.chart.setOption({
+        title: {
+          text: '分类总库存健康度',
+          left: 'center',
+          top: '10'
+        },
         tooltip: {
           trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
+          axisPointer: { type: 'shadow' }
         },
         radar: {
-          radius: '66%',
-          center: ['50%', '42%'],
+          radius: '60%',
+          center: ['50%', '50%'],
           splitNumber: 8,
           splitArea: {
             areaStyle: {
@@ -68,19 +64,12 @@ export default {
               shadowOffsetY: 15
             }
           },
-          indicator: [
-            { name: '文学类', max: 10000 },
-            { name: '科技类', max: 20000 },
-            { name: '经管类', max: 20000 },
-            { name: '生活类', max: 20000 },
-            { name: '文化类', max: 20000 },
-            { name: '流行类', max: 20000 }
-          ]
+          indicator: indicators
         },
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['图书存量', '预期采购', '实际采购']
+          data: ['当前库存总计']
         },
         series: [{
           type: 'radar',
@@ -94,21 +83,11 @@ export default {
               opacity: 1
             }
           },
-          data: [
-            {
-              value: [5000, 7000, 12000, 11000, 15000, 14000],
-              name: '图书存量'
-            },
-            {
-              value: [4000, 9000, 15000, 15000, 13000, 11000],
-              name: '预期采购'
-            },
-            {
-              value: [5500, 11000, 12000, 15000, 12000, 12000],
-              name: '实际采购'
-            }
-          ],
-          animationDuration: animationDuration
+          data: [{
+            value: inventory,
+            name: '当前库存总计'
+          }],
+          animationDuration: 3000
         }]
       })
     }

@@ -3,76 +3,69 @@
 </template>
 
 <script>
-// 👑 修复点：import 置顶
 import echarts from 'echarts'
 import resize from './mixins/resize'
-require('echarts/theme/macarons') // echarts theme
+require('echarts/theme/macarons')
 
 export default {
   mixins: [resize],
   props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    width: {
-      type: String,
-      default: '100%'
-    },
-    height: {
-      type: String,
-      default: '300px'
-    }
+    className: { type: String, default: 'chart' },
+    width: { type: String, default: '100%' },
+    height: { type: String, default: '300px' },
+    chartData: { type: Array, required: true }
   },
   data () {
-    return {
-      chart: null
+    return { chart: null }
+  },
+  watch: {
+    chartData: {
+      deep: true,
+      handler (val) {
+        this.setOptions(val)
+      }
     }
   },
   mounted () {
     this.$nextTick(() => {
-      this.initChart()
+      this.chart = echarts.init(this.$el, 'macarons')
+      this.setOptions(this.chartData)
     })
   },
   beforeDestroy () {
-    if (!this.chart) {
-      return
-    }
+    if (!this.chart) return
     this.chart.dispose()
     this.chart = null
   },
   methods: {
-    initChart () {
-      this.chart = echarts.init(this.$el, 'macarons')
-
+    setOptions (data) {
+      if (!data || data.length === 0) return
+      const legendData = data.map(item => item.name)
       this.chart.setOption({
+        title: {
+          text: '藏书品种占比',
+          left: 'center',
+          top: '10'
+        },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b} : {c} ({d}%)'
+          formatter: '{a} <br/>{b} : {c} 品种 ({d}%)'
         },
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['文学类', '科技类', '经管类', '生活类', '文化类']
+          data: legendData
         },
-        series: [
-          {
-            name: '借阅分布',
-            type: 'pie',
-            roseType: 'radius',
-            radius: [15, 95],
-            center: ['50%', '38%'],
-            data: [
-              { value: 320, name: '文学类' },
-              { value: 240, name: '科技类' },
-              { value: 149, name: '经管类' },
-              { value: 100, name: '生活类' },
-              { value: 59, name: '文化类' }
-            ],
-            animationEasing: 'cubicInOut',
-            animationDuration: 2600
-          }
-        ]
+        series: [{
+          name: '藏书品种分布',
+          type: 'pie',
+          roseType: 'radius',
+          radius: [15, 95],
+          center: ['50%', '45%'],
+          data: data,
+          animationEasing: 'cubicInOut',
+          animationDuration: 2600
+        }]
       })
     }
   }
