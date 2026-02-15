@@ -3,6 +3,7 @@
 </template>
 
 <script>
+// 👑 修复点：import 置顶
 import echarts from 'echarts'
 import resize from './mixins/resize'
 require('echarts/theme/macarons') // echarts theme
@@ -49,8 +50,8 @@ export default {
       this.chart.setOption({
         tooltip: {
           trigger: 'axis',
-          axisPointer: { // 坐标轴指示器，坐标轴触发有效
-            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+          axisPointer: {
+            type: 'shadow'
           }
         },
         radar: {
@@ -68,22 +69,22 @@ export default {
             }
           },
           indicator: [
-            { name: 'Sales', max: 10000 },
-            { name: 'Administration', max: 20000 },
-            { name: 'Information Techology', max: 20000 },
-            { name: 'Customer Support', max: 20000 },
-            { name: 'Development', max: 20000 },
-            { name: 'Marketing', max: 20000 }
+            { name: '文学类', max: 10000 },
+            { name: '科技类', max: 20000 },
+            { name: '经管类', max: 20000 },
+            { name: '生活类', max: 20000 },
+            { name: '文化类', max: 20000 },
+            { name: '流行类', max: 20000 }
           ]
         },
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['Allocated Budget', 'Expected Spending', 'Actual Spending']
+          data: ['图书存量', '预期采购', '实际采购']
         },
         series: [{
           type: 'radar',
-          symbolSize: 0,
+          symbol: 'none',
           areaStyle: {
             normal: {
               shadowBlur: 13,
@@ -96,15 +97,15 @@ export default {
           data: [
             {
               value: [5000, 7000, 12000, 11000, 15000, 14000],
-              name: 'Allocated Budget'
+              name: '图书存量'
             },
             {
               value: [4000, 9000, 15000, 15000, 13000, 11000],
-              name: 'Expected Spending'
+              name: '预期采购'
             },
             {
               value: [5500, 11000, 12000, 15000, 12000, 12000],
-              name: 'Actual Spending'
+              name: '实际采购'
             }
           ],
           animationDuration: animationDuration

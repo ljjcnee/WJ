@@ -3,6 +3,7 @@
 </template>
 
 <script>
+// 👑 修复点：import 置顶
 import echarts from 'echarts'
 import resize from './mixins/resize'
 require('echarts/theme/macarons') // echarts theme
@@ -52,21 +53,21 @@ export default {
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['Industries', 'Technology', 'Forex', 'Gold', 'Forecasts']
+          data: ['文学类', '科技类', '经管类', '生活类', '文化类']
         },
         series: [
           {
-            name: 'WEEKLY WRITE ARTICLES',
+            name: '借阅分布',
             type: 'pie',
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '38%'],
             data: [
-              { value: 320, name: 'Industries' },
-              { value: 240, name: 'Technology' },
-              { value: 149, name: 'Forex' },
-              { value: 100, name: 'Gold' },
-              { value: 59, name: 'Forecasts' }
+              { value: 320, name: '文学类' },
+              { value: 240, name: '科技类' },
+              { value: 149, name: '经管类' },
+              { value: 100, name: '生活类' },
+              { value: 59, name: '文化类' }
             ],
             animationEasing: 'cubicInOut',
             animationDuration: 2600

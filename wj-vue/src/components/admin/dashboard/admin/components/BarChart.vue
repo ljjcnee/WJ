@@ -3,6 +3,7 @@
 </template>
 
 <script>
+// 👑 修复点：import 置顶
 import echarts from 'echarts'
 import resize from './mixins/resize'
 require('echarts/theme/macarons') // echarts theme
@@ -49,8 +50,8 @@ export default {
       this.chart.setOption({
         tooltip: {
           trigger: 'axis',
-          axisPointer: { // 坐标轴指示器，坐标轴触发有效
-            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+          axisPointer: {
+            type: 'shadow'
           }
         },
         grid: {
@@ -62,7 +63,7 @@ export default {
         },
         xAxis: [{
           type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
           axisTick: {
             alignWithLabel: true
           }
@@ -74,21 +75,21 @@ export default {
           }
         }],
         series: [{
-          name: 'pageA',
+          name: '借书量',
           type: 'bar',
           stack: 'vistors',
           barWidth: '60%',
           data: [79, 52, 200, 334, 390, 330, 220],
           animationDuration
         }, {
-          name: 'pageB',
+          name: '还书量',
           type: 'bar',
           stack: 'vistors',
           barWidth: '60%',
           data: [80, 52, 200, 334, 390, 330, 220],
           animationDuration
         }, {
-          name: 'pageC',
+          name: '新增用户',
           type: 'bar',
           stack: 'vistors',
           barWidth: '60%',

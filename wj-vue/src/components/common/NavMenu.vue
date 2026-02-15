@@ -8,10 +8,17 @@
     active-text-color="#409EFF"
     style="min-width: 1300px; box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05); border-bottom: none; z-index: 100; position: relative; margin: 0;">
 
-    <el-menu-item v-for="(item,i) in navList" :key="i" :index="item.name" style="padding: 0 30px;" class="nav-item-with-line">
-      <i :class="item.icon" style="font-size: 18px; margin-right: 5px;"></i>
-      <span style="font-size: 16px; font-weight: bold;">{{ item.navItem }}</span>
-    </el-menu-item>
+    <template v-for="(item, i) in navList">
+      <el-menu-item
+        v-if="!item.adminOnly || isAdmin"
+        :key="i"
+        :index="item.name"
+        style="padding: 0 30px;"
+        class="nav-item-with-line">
+        <i :class="item.icon" style="font-size: 18px; margin-right: 5px;"></i>
+        <span style="font-size: 16px; font-weight: bold;">{{ item.navItem }}</span>
+      </el-menu-item>
+    </template>
 
     <span style="position: absolute; padding-top: 14px; right: 38%; font-size: 24px; font-weight: bold; color: #409EFF; letter-spacing: 2px;">
       <i class="el-icon-reading" style="font-size: 28px; vertical-align: middle;"></i> 智慧学习图书管理系统
@@ -36,12 +43,13 @@ export default {
   data () {
     return {
       navList: [
-        { name: '/library', navItem: '图书馆', icon: 'el-icon-collection' },
-        // 👑 核心优化 1：改名为更符合业务逻辑的“我的借阅”
-        { name: '/mybooks', navItem: '我的借阅', icon: 'el-icon-notebook-1' },
-        { name: '/admin/dashboard', navItem: '后台管理', icon: 'el-icon-setting' }
+        { name: '/library', navItem: '图书馆', icon: 'el-icon-collection', adminOnly: false },
+        { name: '/mybooks', navItem: '我的借阅', icon: 'el-icon-notebook-1', adminOnly: false },
+        // 👑 专属标签：标记它只能由管理员可见
+        { name: '/admin/dashboard', navItem: '后台管理', icon: 'el-icon-setting', adminOnly: true }
       ],
-      isLoggedIn: false
+      isLoggedIn: false,
+      isAdmin: false // 新增：专门记录是否拥有管理员权限
     }
   },
   mounted () {
@@ -54,23 +62,37 @@ export default {
   },
   methods: {
     checkLoginStatus () {
-      // 👑 核心优化 2：精准读取 username，修复老代码里的幽灵 Bug！
       let storeUsername = this.$store.state.username
       let localUsername = window.localStorage.getItem('username')
 
       let loggedIn = false
+      let currentUsername = ''
 
+      // 提取当前的登录账号
       if (storeUsername && storeUsername !== '') {
         loggedIn = true
+        currentUsername = storeUsername
       } else if (localUsername && localUsername !== 'null' && localUsername !== '""' && localUsername !== '[]') {
         loggedIn = true
+        currentUsername = localUsername
       }
 
+      // 去除可能从 LocalStorage 带来的字符串首尾双引号，保证精确匹配不出错
+      if (typeof currentUsername === 'string') {
+        currentUsername = currentUsername.replace(/(^"|"$)/g, '')
+      }
+
+      // 如果正在登录页，强行复位状态
       if (this.$route.path === '/login') {
         loggedIn = false
+        currentUsername = ''
       }
 
       this.isLoggedIn = loggedIn
+
+      // 👑 终极判定：在咱们的系统中，默认超级管理员账号就是 'admin'
+      // 只有当解析出的账号名严格等于 'admin' 时，才允许渲染后台管理菜单！
+      this.isAdmin = (currentUsername === 'admin')
     },
 
     goToLogin () {
@@ -87,13 +109,14 @@ export default {
           if (resp && resp.data.code === 200) {
             this.$store.commit('logout')
             this.isLoggedIn = false
+            this.isAdmin = false // 退出时同步撤销管理员标识
             this.$message.success('已安全退出')
-            // 退出后回到图书馆大厅，不跳登录页
             this.$router.replace('/library').catch(err => err)
           }
         }).catch(() => {
            this.$store.commit('logout')
            this.isLoggedIn = false
+           this.isAdmin = false
            this.$router.replace('/library').catch(err => err)
         })
       }).catch(() => {})
