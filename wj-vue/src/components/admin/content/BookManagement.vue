@@ -52,12 +52,11 @@
           label="出版社"
           fit>
         </el-table-column>
-        <!--<el-table-column-->
-          <!--prop="abs"-->
-          <!--label="摘要"-->
-          <!--show-overflow-tooltip-->
-          <!--fit>-->
-        <!--</el-table-column>-->
+        <el-table-column
+          prop="nums"
+          label="馆藏数量"
+          width="80">
+        </el-table-column>
         <el-table-column
           fixed="right"
           label="操作"
@@ -138,11 +137,10 @@
           category: {
             id: item.category.id.toString(),
             name: item.category.name
-          }
+          },
+          // 👑 修复 2：名字统一为 nums，与你的 Java 实体类完全对应
+          nums: item.nums
         }
-        // this.$refs.edit.category = {
-        //   id: item.category.id.toString()
-        // }
       },
       loadBooks () {
         var _this = this

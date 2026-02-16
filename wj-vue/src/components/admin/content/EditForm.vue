@@ -35,6 +35,11 @@
           <el-option label="科技" value="6"></el-option>
         </el-select>
         </el-form-item>
+
+        <el-form-item label="库存数量" :label-width="formLabelWidth" prop="nums">
+          <el-input v-model="form.nums" autocomplete="off" placeholder="默认数量: 5"></el-input>
+        </el-form-item>
+
         <el-form-item prop="id" style="height: 0">
           <el-input type="hidden" v-model="form.id" autocomplete="off"></el-input>
         </el-form-item>
@@ -67,7 +72,8 @@
           category: {
             id: '',
             name: ''
-          }
+          },
+          nums: 5 // 名字必须叫 nums
         },
         formLabelWidth: '120px'
       }
@@ -86,7 +92,8 @@
           category: {
             id: '',
             name: ''
-          }
+          },
+          nums: 5 // 名字必须叫 nums
         }
       },
       onSubmit () {
@@ -99,7 +106,9 @@
             date: this.form.date,
             press: this.form.press,
             abs: this.form.abs,
-            category: this.form.category
+            category: this.form.category,
+            // 👑 修复 4：极其关键的一步！在这里把填写的库存数量真正发送给 Java 后端
+            nums: this.form.nums
           }).then(resp => {
             if (resp && resp.data.code === 200) {
               this.dialogFormVisible = false

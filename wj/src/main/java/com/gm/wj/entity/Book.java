@@ -29,6 +29,8 @@ public class Book {
     private String date;
     private String press;
     private String abs;
+    // 接入数据库原有的 num 字段
+    private Integer num;
 
     // ↓↓↓ 新加的库存数量字段 ↓↓↓
     private int nums;
@@ -105,4 +107,13 @@ public class Book {
     public void setNums(int nums) {
         this.nums = nums;
     }
+
+    public Integer getNum() {
+        return num;
+    }
+
+    public void setNum(Integer num) {
+        this.num = num;
+    }
+
 }
