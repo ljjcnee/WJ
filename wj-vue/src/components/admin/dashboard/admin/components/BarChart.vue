@@ -38,51 +38,46 @@ export default {
     this.chart = null
   },
   methods: {
-    setOptions ({ xAxis, inLibrary, emptyStock } = {}) {
+    setOptions ({ xAxis, heatData } = {}) {
       if (!xAxis) return
       this.chart.setOption({
         title: {
-          text: '分类在馆状态',
+          text: '智慧学习：借阅热度 TOP 7 排行榜',
           left: 'center',
-          top: '10'
+          top: '0'
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' }
         },
         grid: {
-          top: 40,
+          top: 35,
           left: '2%',
-          right: '2%',
+          right: '5%',
           bottom: '3%',
           containLabel: true
         },
+        // 横向柱状图，X轴Y轴对调
         xAxis: [{
+          type: 'value',
+          axisTick: { show: false }
+        }],
+        yAxis: [{
           type: 'category',
           data: xAxis,
           axisTick: { alignWithLabel: true }
         }],
-        yAxis: [{
-          type: 'value',
-          axisTick: { show: false }
-        }],
         series: [
           {
-            name: '有货品种',
+            name: '借阅热度(次)',
             type: 'bar',
-            stack: 'vistors',
-            barWidth: '40%',
-            data: inLibrary,
-            animationDuration: 3000
-          },
-          {
-            name: '缺货品种',
-            type: 'bar',
-            stack: 'vistors',
-            barWidth: '40%',
-            data: emptyStock,
+            barWidth: '50%',
+            data: heatData,
             animationDuration: 3000,
-            itemStyle: { color: '#f4516c' }
+            itemStyle: {
+              color: '#36a3f7',
+              barBorderRadius: [0, 5, 5, 0]
+            }
           }
         ]
       })

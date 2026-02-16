@@ -43,13 +43,13 @@ export default {
       const legendData = data.map(item => item.name)
       this.chart.setOption({
         title: {
-          text: '藏书品种占比',
+          text: '读者学习领域偏好画像',
           left: 'center',
-          top: '10'
+          top: '0'
         },
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b} : {c} 品种 ({d}%)'
+          formatter: '{a} <br/>{b} : {c} 次借阅 ({d}%)'
         },
         legend: {
           left: 'center',
@@ -57,11 +57,11 @@ export default {
           data: legendData
         },
         series: [{
-          name: '藏书品种分布',
+          name: '阅读领域分布',
           type: 'pie',
           roseType: 'radius',
           radius: [15, 95],
-          center: ['50%', '45%'],
+          center: ['50%', '48%'],
           data: data,
           animationEasing: 'cubicInOut',
           animationDuration: 2600

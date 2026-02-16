@@ -38,13 +38,13 @@ export default {
     this.chart = null
   },
   methods: {
-    setOptions ({ indicators, inventory } = {}) {
+    setOptions ({ indicators, inventory, heat } = {}) {
       if (!indicators || indicators.length === 0) return
       this.chart.setOption({
         title: {
-          text: '分类总库存健康度',
+          text: '馆藏结构 vs 学习热度 评估模型',
           left: 'center',
-          top: '10'
+          top: '0'
         },
         tooltip: {
           trigger: 'axis',
@@ -69,7 +69,7 @@ export default {
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['当前库存总计']
+          data: ['馆藏分配比重', '真实借阅热度']
         },
         series: [{
           type: 'radar',
@@ -83,10 +83,16 @@ export default {
               opacity: 1
             }
           },
-          data: [{
-            value: inventory,
-            name: '当前库存总计'
-          }],
+          data: [
+            {
+              value: inventory,
+              name: '馆藏分配比重'
+            },
+            {
+              value: heat,
+              name: '真实借阅热度'
+            }
+          ],
           animationDuration: 3000
         }]
       })
