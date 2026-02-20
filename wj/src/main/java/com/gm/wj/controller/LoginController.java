@@ -12,6 +12,8 @@ import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
+import org.apache.shiro.crypto.SecureRandomNumberGenerator;
+import org.apache.shiro.crypto.hash.SimpleHash;
 
 import javax.validation.Valid;
 
@@ -50,18 +52,31 @@ public class LoginController {
         }
     }
 
-    @PostMapping("/api/register")
+    @PostMapping("api/register")
+    @ResponseBody
     public Result register(@RequestBody User user) {
-        int status = userService.register(user);
-        switch (status) {
-            case 0:
-                return ResultFactory.buildFailResult("用户名和密码不能为空");
-            case 1:
-                return ResultFactory.buildSuccessResult("注册成功");
-            case 2:
-                return ResultFactory.buildFailResult("用户已存在");
+        String username = user.getUsername();
+        String password = user.getPassword();
+
+        // 1. 前置安全拦截：防止引发空指针异常导致前端弹空框
+        if (username == null || username.trim().equals("") || password == null || password.trim().equals("")) {
+            return ResultFactory.buildFailResult("用户名和密码不能为空");
         }
-        return ResultFactory.buildFailResult("未知错误");
+
+        username = HtmlUtils.htmlEscape(username);
+        user.setUsername(username);
+
+        // 2. 检查该用户名是否已经存在数据库中
+        boolean exist = userService.isExist(username);
+        if (exist) {
+            return ResultFactory.buildFailResult("该用户名已被注册，请换一个重试");
+        }
+
+        // 3. 👑 核心修复：删除了重复的加盐加密代码，直接把纯净的 user 对象丢给 UserService 处理！
+        // 你的 UserService 内部会自动为它生成盐值、MD5加密并存入数据库
+        userService.register(user);
+
+        return ResultFactory.buildSuccessResult("注册成功");
     }
 
     @GetMapping("/api/logout")
