@@ -19,6 +19,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import com.gm.wj.dao.BorrowRecordDAO;
+import com.gm.wj.dao.UserDAO;
+import com.gm.wj.entity.BorrowRecord;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
+
 @RestController
 public class LibraryController {
     @Autowired
@@ -29,6 +36,12 @@ public class LibraryController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    BorrowRecordDAO borrowRecordDAO;
+
+    @Autowired
+    UserDAO userDAO;
 
     @GetMapping("/api/books")
     public Result listBooks() {
@@ -83,16 +96,13 @@ public class LibraryController {
         }
     }
 
-    // 核心安全修复：借阅图书
     @PostMapping("/api/borrow")
     public Result borrowBook(@RequestBody Map<String, Integer> request) {
-        // 1. 获取当前登录用户会话
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isAuthenticated()) {
             return ResultFactory.buildFailResult("请先登录");
         }
 
-        // 2. 查询真实身份
         String username = subject.getPrincipal().toString();
         User user = userService.getByName(username);
 
@@ -108,18 +118,15 @@ public class LibraryController {
         }
     }
 
-    // 核心安全修复：我的书架 (不再轻信前端传来的 uid，而是通过 Shiro 拿真实身份)
     @GetMapping("/api/mybooks")
     public Result getMyBooks() {
         Subject subject = SecurityUtils.getSubject();
         if (!subject.isAuthenticated()) {
             return ResultFactory.buildFailResult("请先登录");
         }
-        // 直接从后端 Session 中拿到当前真正的登录账号
         String username = subject.getPrincipal().toString();
         User user = userService.getByName(username);
 
-        // 用真实的 UID 去查数据库
         return ResultFactory.buildSuccessResult(borrowRecordService.getMyBooks(user.getId()));
     }
 
@@ -128,5 +135,33 @@ public class LibraryController {
         int id = request.get("id");
         borrowRecordService.returnBook(id);
         return ResultFactory.buildSuccessResult("还书成功");
+    }
+
+    @GetMapping("api/books/{id}/records")
+    public Result getBookBorrowRecords(@PathVariable("id") int id) throws Exception {
+        // 👑 核心修复：把 bookService.findById(id) 改成了 bookService.get(id)
+        // 在大多数 Spring Boot 教程项目中，自带的查询方法通常命名为 get()
+        Book book = bookService.getById(id);
+
+        if (book == null) {
+            return ResultFactory.buildFailResult("图书不存在");
+        }
+
+        List<BorrowRecord> records = borrowRecordDAO.findAllByBookAndStatus(book, 0);
+
+        for (BorrowRecord record : records) {
+            try {
+                User user = userDAO.findById(record.getUid()).orElse(null);
+                if (user != null) {
+                    record.setUsername(user.getUsername());
+                } else {
+                    record.setUsername("未知账号");
+                }
+            } catch (Exception e) {
+                record.setUsername("获取账号失败");
+            }
+        }
+
+        return ResultFactory.buildSuccessResult(records);
     }
 }

@@ -81,4 +81,18 @@ public class BorrowRecord {
     public void setStatus(int status) {
         this.status = status;
     }
+
+
+    // 👑 核心魔法：临时字段，只用于给前端传值，绝对不会影响数据库结构！
+    @Transient
+    private String username;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
 }
