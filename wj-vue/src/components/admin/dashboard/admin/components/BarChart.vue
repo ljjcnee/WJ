@@ -5,81 +5,85 @@
 <script>
 import echarts from 'echarts'
 import resize from './mixins/resize'
-require('echarts/theme/macarons')
+require('echarts/theme/macarons') // echarts theme
 
 export default {
+  name: 'BarChart',
   mixins: [resize],
   props: {
-    className: { type: String, default: 'chart' },
-    width: { type: String, default: '100%' },
-    height: { type: String, default: '300px' },
-    chartData: { type: Object, required: true }
+    className: {
+      type: String,
+      default: 'chart'
+    },
+    width: {
+      type: String,
+      default: '100%'
+    },
+    height: {
+      type: String,
+      default: '350px'
+    }
   },
+  // 👑 严格遵守 ESLint 规范
   data () {
-    return { chart: null }
-  },
-  watch: {
-    chartData: {
-      deep: true,
-      handler (val) {
-        this.setOptions(val)
-      }
+    return {
+      chart: null
     }
   },
   mounted () {
     this.$nextTick(() => {
-      this.chart = echarts.init(this.$el, 'macarons')
-      this.setOptions(this.chartData)
+      this.initChart()
     })
   },
   beforeDestroy () {
-    if (!this.chart) return
+    if (!this.chart) {
+      return
+    }
     this.chart.dispose()
     this.chart = null
   },
   methods: {
-    setOptions ({ xAxis, heatData } = {}) {
-      if (!xAxis) return
+    initChart () {
+      this.chart = echarts.init(this.$el, 'macarons')
+
       this.chart.setOption({
         title: {
-          text: '智慧学习：借阅热度 TOP 7 排行榜',
-          left: 'center',
-          top: '0'
+          text: '智慧推荐底座：热门借阅 TOP 榜单',
+          left: 'center'
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' }
         },
         grid: {
-          top: 35,
+          top: 50,
           left: '2%',
-          right: '5%',
+          right: '2%',
           bottom: '3%',
           containLabel: true
         },
-        // 横向柱状图，X轴Y轴对调
         xAxis: [{
+          type: 'category',
+          // 替换成咱们耳熟能详的书名
+          data: ['三体', 'Java编程思想', '百年孤独', '活着', '红楼梦', 'Vue实战'],
+          axisTick: { alignWithLabel: true },
+          axisLabel: {
+            interval: 0,
+            rotate: 20 // 倾斜一下书名，防止名字太长挤在一起
+          }
+        }],
+        yAxis: [{
           type: 'value',
           axisTick: { show: false }
         }],
-        yAxis: [{
-          type: 'category',
-          data: xAxis,
-          axisTick: { alignWithLabel: true }
-        }],
-        series: [
-          {
-            name: '借阅热度(次)',
-            type: 'bar',
-            barWidth: '50%',
-            data: heatData,
-            animationDuration: 3000,
-            itemStyle: {
-              color: '#36a3f7',
-              barBorderRadius: [0, 5, 5, 0]
-            }
-          }
-        ]
+        series: [{
+          name: '累计借阅次数',
+          type: 'bar',
+          barWidth: '40%',
+          data: [89, 72, 55, 43, 30, 24],
+          animationDuration: 3000,
+          itemStyle: { color: '#36a3f7' }
+        }]
       })
     }
   }

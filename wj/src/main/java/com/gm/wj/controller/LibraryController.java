@@ -164,4 +164,26 @@ public class LibraryController {
 
         return ResultFactory.buildSuccessResult(records);
     }
+
+    // 👑 智慧大屏核心接口：统揽全局数据
+    @GetMapping("/api/admin/dashboard/statistics")
+    public Result getDashboardStatistics() {
+        // 1. 馆藏知识库总数
+        long bookCount = bookService.count();
+        // 2. 注册求知学者总数
+        long userCount = userService.count();
+        // 3. 当前外借/流转中 (0表示未还)
+        long borrowingCount = borrowRecordDAO.countByStatus(0);
+        // 4. 累计借阅流水 (JPA自带的count方法，统计表里所有记录)
+        long totalBorrowCount = borrowRecordDAO.count();
+
+        // 将数据打包给前端 (这里直接写全路径，防止你少导包报错)
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("bookCount", bookCount);
+        stats.put("userCount", userCount);
+        stats.put("borrowingCount", borrowingCount);
+        stats.put("totalBorrowCount", totalBorrowCount);
+
+        return ResultFactory.buildSuccessResult(stats);
+    }
 }
