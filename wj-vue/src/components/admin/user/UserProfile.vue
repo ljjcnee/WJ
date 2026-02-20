@@ -103,6 +103,7 @@
               编辑
             </el-button>
             <el-button
+              @click="deleteUser(scope.row.id)"
               type="text"
               size="small">
               移除
@@ -223,6 +224,32 @@
           if (resp && resp.data.code === 200) {
             this.$alert('密码已重置为 123')
           }
+        })
+      },
+      // 👑 核心新增：向后端发送删除请求
+      deleteUser (id) {
+        this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.$axios.delete('/admin/user/' + id).then(resp => {
+            if (resp && resp.data.code === 200) {
+              this.$message({
+                type: 'success',
+                message: '删除成功!'
+              })
+              // 删除成功后，重新拉取一次数据刷新表格
+              this.listUsers()
+            } else {
+              this.$message.error('删除失败')
+            }
+          })
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
         })
       }
     }
