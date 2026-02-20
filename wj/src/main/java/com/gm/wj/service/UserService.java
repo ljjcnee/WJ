@@ -22,8 +22,14 @@ public class UserService {
         List<User> users =  userDAO.findAll();
         List<AdminRole> roles;
         for (User user : users) {
-            roles = adminRoleService.listRolesByUser(user.getName());
+            // 👑 核心修复：原来是 user.getName()，现在必须改成 user.getUsername()！
+            // 因为 admin 等老用户没有真实姓名，传 null 会直接导致后端崩溃
+            roles = adminRoleService.listRolesByUser(user.getUsername());
             user.setRoles(roles);
+
+            // 安全优化：在发给前端展示之前，把密码和盐值清空，防止敏感信息在浏览器被抓包
+            user.setPassword("");
+            user.setSalt("");
         }
         return users;
     }
