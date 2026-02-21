@@ -169,13 +169,16 @@ axios.interceptors.response.use(
     return response
   },
   error => {
-    if (error) {
+    // 👑 核心修复：不要无差别踢人！
+    // 只有当后端明确返回 401（身份过期/未授权）时，才强制退出并跳转登录页
+    if (error.response && error.response.status === 401) {
       store.commit('logout')
       router.replace('/login')
     }
     // 返回接口返回的错误信息
     return Promise.reject(error)
-  })
+  }
+)
 
 const initAdminMenu = (router, store) => {
   // 防止重复触发加载菜单操作
