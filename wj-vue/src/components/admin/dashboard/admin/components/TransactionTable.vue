@@ -1,19 +1,24 @@
 <template>
   <el-table :data="list" style="width: 100%;padding-top: 15px;">
-    <el-table-column label="Donate_No" min-width="200">
+    <el-table-column label="流水号" width="80" align="center">
       <template slot-scope="scope">
-        {{ scope.row.order_no | orderNoFilter }}
+        {{ scope.row.id }}
       </template>
     </el-table-column>
-    <el-table-column label="amount" width="195" align="center">
+    <el-table-column label="借阅书籍" min-width="150" show-overflow-tooltip>
       <template slot-scope="scope">
-        ¥{{ scope.row.price | toThousandFilter }}
+        {{ scope.row.book ? scope.row.book.title : '未知书籍' }}
       </template>
     </el-table-column>
-    <el-table-column label="Status" width="100" align="center">
+    <el-table-column label="借阅人" width="100" align="center">
+      <template slot-scope="scope">
+        <el-tag type="info">{{ scope.row.username || '未知用户' }}</el-tag>
+      </template>
+    </el-table-column>
+    <el-table-column label="状态" width="100" align="center">
       <template slot-scope="{row}">
-        <el-tag :type="row.status | statusFilter">
-          {{ row.status }}
+        <el-tag :type="row.status === 0 ? 'danger' : 'success'">
+          {{ row.status === 0 ? '借出中' : '已归还' }}
         </el-tag>
       </template>
     </el-table-column>
@@ -21,34 +26,12 @@
 </template>
 
 <script>
-// import { transactionList } from '@/api/remote-search'
-
 export default {
-  filters: {
-    statusFilter (status) {
-      const statusMap = {
-        success: 'success',
-        pending: 'danger'
-      }
-      return statusMap[status]
-    },
-    orderNoFilter (str) {
-      return str.substring(0, 30)
-    }
-  },
-  data () {
-    return {
-      list: null
-    }
-  },
-  created () {
-    this.fetchData()
-  },
-  methods: {
-    fetchData () {
-      // transactionList().then(response => {
-      //   this.list = response.data.items.slice(0, 8)
-      // })
+  // 👑 接收真实的近期流水数组
+  props: {
+    list: {
+      type: Array,
+      default: () => []
     }
   }
 }

@@ -4,8 +4,8 @@
 
 <script>
 import echarts from 'echarts'
-import resize from './mixins/resize'
-require('echarts/theme/macarons')
+import resize from './mixins/resize' // 👑 修复点：把它提到 require 的前面！
+require('echarts/theme/macarons') // echarts theme
 
 export default {
   mixins: [resize],
@@ -13,10 +13,17 @@ export default {
     className: { type: String, default: 'chart' },
     width: { type: String, default: '100%' },
     height: { type: String, default: '350px' },
-    chartData: { type: Object, required: true }
+    autoResize: { type: Boolean, default: true },
+    // 👑 接收真实近七日数据
+    chartData: {
+      type: Object,
+      required: true
+    }
   },
   data () {
-    return { chart: null }
+    return {
+      chart: null
+    }
   },
   watch: {
     chartData: {
@@ -32,7 +39,9 @@ export default {
     })
   },
   beforeDestroy () {
-    if (!this.chart) return
+    if (!this.chart) {
+      return
+    }
     this.chart.dispose()
     this.chart = null
   },
@@ -41,71 +50,34 @@ export default {
       this.chart = echarts.init(this.$el, 'macarons')
       this.setOptions(this.chartData)
     },
-    setOptions ({ xAxis, expectedData, actualData } = {}) {
-      if (!xAxis) return
+    setOptions ({ xAxisData, borrowData, returnData } = {}) {
       this.chart.setOption({
-        title: {
-          text: '各分类库存对比走势',
-          left: '10'
-        },
+        title: { text: '全馆近七日借阅/归还活跃趋势', left: 'center', textStyle: { color: '#666', fontSize: 16, fontWeight: 'normal' } },
         xAxis: {
-          data: xAxis,
+          data: xAxisData, // 👑 真实的近七天日期
           boundaryGap: false,
           axisTick: { show: false }
         },
-        grid: {
-          left: 10,
-          right: 10,
-          bottom: 20,
-          top: 40,
-          containLabel: true
-        },
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: { type: 'cross' },
-          padding: [5, 10]
-        },
-        yAxis: {
-          axisTick: { show: false }
-        },
-        legend: {
-          data: ['最高标杆库存', '平均库存']
-        },
+        grid: { left: 10, right: 10, bottom: 20, top: 40, containLabel: true },
+        tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, padding: [5, 10] },
+        yAxis: { axisTick: { show: false } },
+        legend: { data: ['每日借出', '每日归还'], bottom: 0 },
         series: [
           {
-            name: '最高标杆库存',
-            itemStyle: {
-              normal: {
-                color: '#FF005A',
-                lineStyle: {
-                  color: '#FF005A',
-                  width: 2
-                }
-              }
-            },
+            name: '每日借出',
             smooth: true,
             type: 'line',
-            data: expectedData,
+            itemStyle: { normal: { color: '#FF005A', lineStyle: { color: '#FF005A', width: 2 } } },
+            data: borrowData, // 👑 真实的借出量
             animationDuration: 2800,
             animationEasing: 'cubicInOut'
           },
           {
-            name: '平均库存',
+            name: '每日归还',
             smooth: true,
             type: 'line',
-            itemStyle: {
-              normal: {
-                color: '#3888fa',
-                lineStyle: {
-                  color: '#3888fa',
-                  width: 2
-                },
-                areaStyle: {
-                  color: '#f3f8ff'
-                }
-              }
-            },
-            data: actualData,
+            itemStyle: { normal: { color: '#3888fa', lineStyle: { color: '#3888fa', width: 2 }, areaStyle: { color: '#f3f8ff' } } },
+            data: returnData, // 👑 真实的归还量
             animationDuration: 2800,
             animationEasing: 'quadraticOut'
           }

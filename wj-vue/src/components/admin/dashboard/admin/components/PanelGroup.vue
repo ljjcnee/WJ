@@ -1,62 +1,60 @@
 <template>
   <el-row :gutter="40" class="panel-group">
-
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel">
-        <div class="card-panel-icon-wrapper icon-people">
-          <i class="el-icon-reading card-panel-icon"></i>
+      <div class="card-panel" @click="handleSetLineChartData('newVisits')">
+        <div class="card-panel-icon-wrapper icon-books">
+          <i class="el-icon-reading card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            馆藏知识库总数
+            馆藏图书总量
           </div>
-          <count-to :start-val="0" :end-val="stats.bookCount || 0" :duration="2600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="stats.books" :duration="2600" class="card-panel-num" />
         </div>
       </div>
     </el-col>
 
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel">
-        <div class="card-panel-icon-wrapper icon-message">
-          <i class="el-icon-user-solid card-panel-icon"></i>
+      <div class="card-panel" @click="handleSetLineChartData('messages')">
+        <div class="card-panel-icon-wrapper icon-users">
+          <i class="el-icon-user card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            注册求知学者
+            注册读者总数
           </div>
-          <count-to :start-val="0" :end-val="stats.userCount || 0" :duration="3000" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="stats.users" :duration="3000" class="card-panel-num" />
         </div>
       </div>
     </el-col>
 
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel">
-        <div class="card-panel-icon-wrapper icon-money">
-          <i class="el-icon-data-line card-panel-icon"></i>
+      <div class="card-panel" @click="handleSetLineChartData('purchases')">
+        <div class="card-panel-icon-wrapper icon-history">
+          <i class="el-icon-document-copy card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            当前外借/流转中
+            历史借阅流水
           </div>
-          <count-to :start-val="0" :end-val="stats.borrowingCount || 0" :duration="3200" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="stats.borrows" :duration="3200" class="card-panel-num" />
         </div>
       </div>
     </el-col>
 
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <i class="el-icon-s-data card-panel-icon"></i>
+      <div class="card-panel" @click="handleSetLineChartData('shoppings')">
+        <div class="card-panel-icon-wrapper icon-active">
+          <i class="el-icon-data-line card-panel-icon" />
         </div>
         <div class="card-panel-description">
           <div class="card-panel-text">
-            累计借阅流水
+            今日活跃动作
           </div>
-          <count-to :start-val="0" :end-val="stats.totalBorrowCount || 0" :duration="3600" class="card-panel-num" />
+          <count-to :start-val="0" :end-val="stats.active" :duration="3600" class="card-panel-num" />
         </div>
       </div>
     </el-col>
-
   </el-row>
 </template>
 
@@ -64,35 +62,26 @@
 import CountTo from 'vue-count-to'
 
 export default {
-  name: 'PanelGroup',
   components: {
     CountTo
   },
-  // 👑 ESLint 格式已修复 (加了空格)
-  data () {
-    return {
-      stats: {
-        bookCount: 0,
-        userCount: 0,
-        borrowingCount: 0,
-        totalBorrowCount: 0
+  // 👑 新增：接收从 index.vue 传过来的 stats 对象
+  props: {
+    stats: {
+      type: Object,
+      default: () => {
+        return {
+          books: 0,
+          users: 0,
+          borrows: 0,
+          active: 0
+        }
       }
     }
   },
-  // 👑 ESLint 格式已修复
-  mounted () {
-    this.loadStatistics()
-  },
   methods: {
-    // 👑 ESLint 格式已修复
-    loadStatistics () {
-      this.$axios.get('/admin/dashboard/statistics').then(resp => {
-        if (resp && resp.data.code === 200 && resp.data.result) {
-          this.stats = resp.data.result
-        }
-      }).catch(() => {
-        console.log('数据拉取失败，显示默认0')
-      })
+    handleSetLineChartData (type) {
+      this.$emit('handleSetLineChartData', type)
     }
   }
 }
@@ -116,22 +105,22 @@ export default {
     background: #fff;
     box-shadow: 4px 4px 40px rgba(0, 0, 0, .05);
     border-color: rgba(0, 0, 0, .05);
-    border-radius: 10px;
 
     &:hover {
       .card-panel-icon-wrapper {
         color: #fff;
       }
-      .icon-people { background: #40c9c6; }
-      .icon-message { background: #36a3f7; }
-      .icon-money { background: #f4516c; }
-      .icon-shopping { background: #34bfa3; }
+
+      .icon-books { background: #40c9c6; }
+      .icon-users { background: #36a3f7; }
+      .icon-history { background: #f4516c; }
+      .icon-active { background: #34bfa3 }
     }
 
-    .icon-people { color: #40c9c6; }
-    .icon-message { color: #36a3f7; }
-    .icon-money { color: #f4516c; }
-    .icon-shopping { color: #34bfa3; }
+    .icon-books { color: #40c9c6; }
+    .icon-users { color: #36a3f7; }
+    .icon-history { color: #f4516c; }
+    .icon-active { color: #34bfa3 }
 
     .card-panel-icon-wrapper {
       float: left;
@@ -154,8 +143,8 @@ export default {
 
       .card-panel-text {
         line-height: 18px;
-        color: #8caaac;
-        font-size: 14px;
+        color: rgba(0, 0, 0, 0.45);
+        font-size: 16px;
         margin-bottom: 12px;
       }
 
@@ -170,13 +159,14 @@ export default {
   .card-panel-description {
     display: none;
   }
+
   .card-panel-icon-wrapper {
     float: none !important;
     width: 100%;
     height: 100%;
     margin: 0 !important;
 
-    .card-panel-icon {
+    .svg-icon {
       display: block;
       margin: 14px auto !important;
       float: none !important;

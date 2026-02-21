@@ -1,10 +1,6 @@
 <template>
   <div class="dashboard-editor-container">
-    <panel-group :panel-data="panelData" />
-
-    <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
-      <line-chart :chart-data="lineChartData" />
-    </el-row>
+    <panel-group :stats="panelStats" />
 
     <el-row :gutter="32">
       <el-col :xs="24" :sm="24" :lg="8">
@@ -23,6 +19,16 @@
         </div>
       </el-col>
     </el-row>
+
+    <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
+      <line-chart :chart-data="lineChartData" />
+    </el-row>
+
+    <el-row>
+      <el-col :span="24" style="margin-bottom:30px;">
+        <transaction-table :list="transactionList" />
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -32,6 +38,8 @@ import LineChart from './components/LineChart'
 import RaddarChart from './components/RaddarChart'
 import PieChart from './components/PieChart'
 import BarChart from './components/BarChart'
+import TransactionTable from './components/TransactionTable'
+// 👑 已彻底铲除 TodoList 的引入
 
 export default {
   name: 'DashboardAdmin',
@@ -40,110 +48,125 @@ export default {
     LineChart,
     RaddarChart,
     PieChart,
-    BarChart
+    BarChart,
+    TransactionTable
+    // 👑 已彻底铲除 TodoList 的注册
   },
   data () {
     return {
-      panelData: {
-        totalBooks: 0,
-        totalBorrows: 0,
-        totalReaders: 0,
-        activeBorrows: 0
-      },
+      panelStats: { books: 0, borrows: 0, users: 0, active: 0 },
+      lineChartData: { xAxisData: [], borrowData: [], returnData: [] },
       pieChartData: [],
-      radarChartData: {
-        indicators: [],
-        inventory: [],
-        heat: []
-      },
-      lineChartData: {
-        xAxis: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-        borrows: [120, 132, 101, 134, 90, 230, 210],
-        returns: [100, 112, 91, 114, 110, 180, 150]
-      },
-      barChartData: {
-        xAxis: [],
-        heatData: []
-      }
+      radarChartData: { indicators: [], inventory: [], heat: [] },
+      barChartData: { xAxis: [], heatData: [] },
+      transactionList: []
     }
   },
   mounted () {
+    this.loadPanelStats()
     this.loadRealData()
+    this.loadTrendAndTableData()
   },
   methods: {
+    loadPanelStats () {
+      this.$axios.get('/admin/dashboard/stats').then(resp => {
+        if (resp && resp.data.code === 200) {
+          this.panelStats = resp.data.result
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+
     loadRealData () {
-      this.$axios.get('/books').then(resp => {
+      this.$axios.get('/admin/dashboard/chart-data').then(resp => {
         if (resp && resp.data.code === 200) {
           this.processData(resp.data.result)
         }
+      }).catch(err => {
+        console.log(err)
       })
     },
+
+    loadTrendAndTableData () {
+      this.$axios.get('/admin/dashboard/recent-records').then(resp => {
+        if (resp && resp.data.code === 200) {
+          const records = resp.data.result
+
+          // 给底部的全宽表格赋值：截取最新的前 10 条流水
+          this.transactionList = [...records].reverse().slice(0, 10)
+
+          this.processLineChart(records)
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    },
+
+    processLineChart (records) {
+      const xAxisData = []
+      const borrowData = [0, 0, 0, 0, 0, 0, 0]
+      const returnData = [0, 0, 0, 0, 0, 0, 0]
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        let month = '' + (d.getMonth() + 1)
+        let day = '' + d.getDate()
+        if (month.length < 2) month = '0' + month
+        if (day.length < 2) day = '0' + day
+        xAxisData.push(`${d.getFullYear()}-${month}-${day}`)
+      }
+
+      records.forEach(record => {
+        if (record.borrowTime) {
+          const bDate = record.borrowTime.substring(0, 10)
+          const bIdx = xAxisData.indexOf(bDate)
+          if (bIdx > -1) borrowData[bIdx]++
+        }
+        if (record.returnTime) {
+          const rDate = record.returnTime.substring(0, 10)
+          const rIdx = xAxisData.indexOf(rDate)
+          if (rIdx > -1) returnData[rIdx]++
+        }
+      })
+
+      this.lineChartData = { xAxisData, borrowData, returnData }
+    },
+
     processData (books) {
-      let totalInventory = 0
-      let totalBorrowsGlobal = 0
       const categoryMap = {}
       const bookHeatList = []
 
       books.forEach(book => {
-        totalInventory += (book.nums || 1)
+        let borrowHeat = book.heat + 5
 
-        // 核心算法：利用真实书名长度和分类信息，模拟一个固定逼真的借阅热度
-        const titleLen = book.title ? book.title.length : 5
-        let borrowHeat = (book.id * 17 + titleLen * 23) % 200 + 30
-        totalBorrowsGlobal += borrowHeat
-
-        // 收集用于排行榜的数据
         bookHeatList.push({
           name: book.title || '未知图书',
           heat: borrowHeat
         })
 
-        // 分类统计
-        const catName = book.category ? book.category.name : '未分类'
+        const catName = book.category || '未分类'
         if (!categoryMap[catName]) {
-          categoryMap[catName] = {
-            inventory: 0,
-            borrowHeat: 0
-          }
+          categoryMap[catName] = { inventory: 0, borrowHeat: 0 }
         }
         categoryMap[catName].inventory += (book.nums || 1)
         categoryMap[catName].borrowHeat += borrowHeat
       })
 
-      // 1. 顶部卡片数据
-      this.panelData = {
-        totalBooks: totalInventory,
-        totalBorrows: totalBorrowsGlobal + 1500, // 加上历史基数
-        totalReaders: 365, // 模拟真实读者数
-        activeBorrows: Math.floor(totalBorrowsGlobal * 0.15) // 模拟正在流转中
-      }
-
-      // 2. 柱状图：计算热度 TOP 7 排行榜
       bookHeatList.sort((a, b) => b.heat - a.heat)
-      const top7 = bookHeatList.slice(0, 7).reverse() // 反转以便在柱状图中从上到下显示
+      const top7 = bookHeatList.slice(0, 7).reverse()
       this.barChartData = {
-        xAxis: top7.map(item => item.name.substring(0, 8) + (item.name.length > 8 ? '..' : '')), // 截断超长书名
+        xAxis: top7.map(item => item.name.substring(0, 8) + (item.name.length > 8 ? '..' : '')),
         heatData: top7.map(item => item.heat)
       }
 
       const categories = Object.keys(categoryMap)
+      this.pieChartData = categories.map(key => ({ name: key, value: categoryMap[key].inventory }))
 
-      // 3. 饼图：读者学习偏好（基于各分类借阅热度，而非库存）
-      this.pieChartData = categories.map(key => ({
-        name: key,
-        value: categoryMap[key].borrowHeat
-      }))
-
-      // 4. 雷达图：馆藏结构 vs 学习热度
       this.radarChartData = {
-        indicators: categories.map(key => ({
-          name: key,
-          max: Math.max(
-            categoryMap[key].inventory * 2,
-            categoryMap[key].borrowHeat * 1.5
-          )
-        })),
-        inventory: categories.map(key => categoryMap[key].inventory * 2), // 乘以权重平衡坐标轴
+        indicators: categories.map(key => ({ name: key, max: Math.max(categoryMap[key].inventory * 2, categoryMap[key].borrowHeat * 1.5) })),
+        inventory: categories.map(key => categoryMap[key].inventory * 2),
         heat: categories.map(key => categoryMap[key].borrowHeat)
       }
     }

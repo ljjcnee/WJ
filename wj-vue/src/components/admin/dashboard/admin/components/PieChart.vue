@@ -22,12 +22,25 @@ export default {
     height: {
       type: String,
       default: '350px'
+    },
+    // 👑 核心新增 1：接收从 index.vue 传过来的真实库存数组
+    chartData: {
+      type: Array,
+      default: () => []
     }
   },
-  // 👑 严格遵守 ESLint 规范，加了空格
   data () {
     return {
       chart: null
+    }
+  },
+  // 👑 核心新增 2：监听数据变化，一旦数据库里图书有变，立刻重绘饼图！
+  watch: {
+    chartData: {
+      deep: true,
+      handler (val) {
+        this.setOptions(val)
+      }
     }
   },
   mounted () {
@@ -45,11 +58,18 @@ export default {
   methods: {
     initChart () {
       this.chart = echarts.init(this.$el, 'macarons')
+      // 初始化时载入外部传来的真数据
+      this.setOptions(this.chartData)
+    },
+    // 👑 核心新增 3：把死数据扒掉，换成动态绑定的 expectedData
+    setOptions (expectedData) {
+      // 动态提取所有的分类名字，用来渲染底部的图例
+      const legendData = expectedData.map(item => item.name)
 
       this.chart.setOption({
         title: {
           text: '馆藏智慧知识画像',
-          subtext: '各分类图书占比情况',
+          subtext: '真实库存分布情况', // 修正了副标题
           left: 'center'
         },
         tooltip: {
@@ -59,23 +79,16 @@ export default {
         legend: {
           left: 'center',
           bottom: '10',
-          data: ['文学', '计算机', '理学', '工程', '哲学', '艺术']
+          data: legendData // 👑 动态绑定真实的分类名
         },
         series: [
           {
-            name: '藏书数量',
+            name: '真实馆藏数量',
             type: 'pie',
             roseType: 'radius',
             radius: [15, 95],
             center: ['50%', '42%'],
-            data: [
-              { value: 320, name: '文学' },
-              { value: 240, name: '计算机' },
-              { value: 149, name: '理学' },
-              { value: 100, name: '工程' },
-              { value: 59, name: '哲学' },
-              { value: 80, name: '艺术' }
-            ],
+            data: expectedData, // 👑 动态绑定数据库里实打实的库存数据！
             animationEasing: 'cubicInOut',
             animationDuration: 2600
           }
