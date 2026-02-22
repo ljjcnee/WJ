@@ -21,7 +21,7 @@ export default {
     },
     height: {
       type: String,
-      default: '350px'
+      default: '300px'
     },
     // 👑 核心新增 1：接收从 index.vue 传过来的真实库存数组
     chartData: {
@@ -66,10 +66,10 @@ export default {
       // 动态提取所有的分类名字，用来渲染底部的图例
       const legendData = expectedData.map(item => item.name)
 
-      this.chart.setOption({
+     this.chart.setOption({
         title: {
           text: '馆藏智慧知识画像',
-          subtext: '真实库存分布情况', // 修正了副标题
+          subtext: '真实库存分布情况',
           left: 'center'
         },
         tooltip: {
@@ -77,18 +77,20 @@ export default {
           formatter: '{a} <br/>{b} : {c}本 ({d}%)'
         },
         legend: {
+          type: 'scroll', // 👑 新增魔法：如果未来分类太多，允许图例左右滚动，绝不往上乱挤！
           left: 'center',
-          bottom: '10',
-          data: legendData // 👑 动态绑定真实的分类名
+          bottom: '0', // 👑 把图例尽量往下压，贴紧底边
+          data: legendData
         },
         series: [
           {
             name: '真实馆藏数量',
             type: 'pie',
             roseType: 'radius',
-            radius: [15, 95],
-            center: ['50%', '42%'],
-            data: expectedData, // 👑 动态绑定数据库里实打实的库存数据！
+            // 👑 核心修复：把外半径从 95 缩小到 70！给外围的文字标签留出足够的“呼吸空间”
+            radius: [15, 70],
+            center: ['50%', '52%'], // 👑 稍微往下偏一点点，避开头部的副标题
+            data: expectedData,
             animationEasing: 'cubicInOut',
             animationDuration: 2600
           }

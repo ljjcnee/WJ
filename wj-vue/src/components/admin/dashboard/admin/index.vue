@@ -139,7 +139,8 @@ export default {
       const bookHeatList = []
 
       books.forEach(book => {
-        let borrowHeat = book.heat + 5
+        // 👑 1. 彻底扒掉水分！直接等于数据库传来的真实被借阅次数，不加 5！
+        let borrowHeat = book.heat
 
         bookHeatList.push({
           name: book.title || '未知图书',
@@ -150,10 +151,12 @@ export default {
         if (!categoryMap[catName]) {
           categoryMap[catName] = { inventory: 0, borrowHeat: 0 }
         }
-        categoryMap[catName].inventory += (book.nums || 1)
+        // 👑 2. 彻底扒掉 0 库存保护！如果没有库存或者为 0，就是 0，绝不强行加 1！
+        categoryMap[catName].inventory += (book.nums ? book.nums : 0)
         categoryMap[catName].borrowHeat += borrowHeat
       })
 
+      // 右侧柱状图：真实借阅风云榜
       bookHeatList.sort((a, b) => b.heat - a.heat)
       const top7 = bookHeatList.slice(0, 7).reverse()
       this.barChartData = {
@@ -162,12 +165,21 @@ export default {
       }
 
       const categories = Object.keys(categoryMap)
-      this.pieChartData = categories.map(key => ({ name: key, value: categoryMap[key].inventory }))
 
+      // 中间饼图：真实库存分类占比
+      this.pieChartData = categories.map(key => ({
+        name: key,
+        value: categoryMap[key].inventory
+      }))
+
+      // 👑 3. 雷达图：彻底删掉 *2 和 *1.5 的放大系数，展示最原始的指标！
       this.radarChartData = {
-        indicators: categories.map(key => ({ name: key, max: Math.max(categoryMap[key].inventory * 2, categoryMap[key].borrowHeat * 1.5) })),
-        inventory: categories.map(key => categoryMap[key].inventory * 2),
-        heat: categories.map(key => categoryMap[key].borrowHeat)
+        indicators: categories.map(key => ({
+          name: key,
+          max: Math.max(categoryMap[key].inventory, categoryMap[key].borrowHeat) + 2 // max 稍微加 2 只是为了让图表边缘不顶破天花板，不影响真实悬浮数据
+        })),
+        inventory: categories.map(key => categoryMap[key].inventory), // 绝对真实的库存原值
+        heat: categories.map(key => categoryMap[key].borrowHeat) // 绝对真实的热度原值
       }
     }
   }
